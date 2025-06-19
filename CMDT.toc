@@ -1,0 +1,7 @@
+## Interface: 50500
+## Title: Challenge Modes Dungeon Tool
+## Notes: Addon for Mists of Pandaria
+## Author: Caisman
+## Version: 1.0
+CMDT.lua
+CMDT.xml
