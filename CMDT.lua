@@ -1,9 +1,12 @@
+-- Initialize the Frames
 local modal = CreateFrame("Frame", "MyModalFrame", UIParent, "BackdropTemplate")
 local overlay = CreateFrame("Frame", nil, UIParent)
 
+-- Initialize the Libraries
 local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")
 
+-- Create Object for Minimap
 local myLDB = LDB:NewDataObject("CMDT", {
     type = "data source",
     text = "CMDT",
@@ -53,7 +56,7 @@ modal:SetFrameLevel(overlay:GetFrameLevel() + 1)
 modal:EnableMouse(true)
 modal:Hide()
 
--- Title
+-- Frame Header
 local header = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 header:SetPoint("TOP", modal, "TOP", 0, -10)
 header:SetText("CMDT Modal")
