@@ -2,7 +2,6 @@
     <Frame name="MyFirstAddonFrame" hidden="false">
         <Scripts>
             <OnLoad>
-                CMDT_OnLoad(self);
             </OnLoad>
         </Scripts>
     </Frame>

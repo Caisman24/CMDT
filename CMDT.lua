@@ -3,8 +3,65 @@ local modal = CreateFrame("Frame", "MyModalFrame", UIParent, "BackdropTemplate")
 local overlay = CreateFrame("Frame", nil, UIParent)
 
 -- Initialize the Libraries
+local AceGUI = LibStub("AceGUI-3.0")
 local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")
+
+MyAddonDB = MyAddonDB or {}
+local modalFrame = nil
+
+local function CreateAceModal()
+    local frame = AceGUI:Create("Frame")
+    frame:SetTitle("CMDT")
+    frame:SetStatusText(" ")
+    frame:SetLayout("Flow")
+    frame:SetWidth(400)
+    frame:SetHeight(200)
+    frame:SetCallback("OnClose", function(widget)
+        AceGUI:Release(widget)
+        modalFrame = nil
+    end)
+
+    -- Create a horizontal group for icon + text
+    local headerGroup = AceGUI:Create("SimpleGroup")
+    headerGroup:SetLayout("Flow")
+    headerGroup:SetFullWidth(true)
+
+    -- Add the icon
+    local icon = AceGUI:Create("Icon")
+    icon:SetImage("Interface\\AddOns\\CMDT\\minimap-icon.tga")
+    icon:SetImageSize(24, 24)
+    icon:SetWidth(28) -- padding around icon
+    headerGroup:AddChild(icon)
+
+    -- Add the label
+    local headerLabel = AceGUI:Create("Label")
+    headerLabel:SetText("|cffffff00CMDT Modal|r")
+    headerLabel:SetFontObject(GameFontNormalLarge)
+    headerLabel:SetFullWidth(true)
+    headerLabel:SetJustifyH("LEFT")
+    headerGroup:AddChild(headerLabel)
+
+    -- Add the group to the modal
+    frame:AddChild(headerGroup)
+
+    return frame
+end
+
+-- Function to toggle modal visibility
+local function ToggleModal()
+    if modalFrame and modalFrame.frame:IsShown() then
+        modalFrame:Hide()
+    else
+        modalFrame = CreateAceModal()
+    end
+end
+
+-- Slash command toggling modal
+SLASH_CMDT1 = "/cmdt"
+SlashCmdList["CMDT"] = function()
+    ToggleModal()
+end
 
 -- Create Object for Minimap
 local myLDB = LDB:NewDataObject("CMDT", {
@@ -13,13 +70,7 @@ local myLDB = LDB:NewDataObject("CMDT", {
     icon = "Interface\\AddOns\\CMDT\\minimap-icon.tga",
     OnClick = function(_, button)
         if button == "LeftButton" then
-            if modal:IsShown() then
-                modal:Hide()
-                overlay:Hide()
-            else
-                overlay:Show()
-                modal:Show()
-            end
+            ToggleModal()
         elseif button == "RightButton" then
             print("Right-clicked minimap icon")
         end
@@ -30,58 +81,5 @@ local myLDB = LDB:NewDataObject("CMDT", {
     end,
 })
 
-MyAddonDB = MyAddonDB or {}
+
 LDBIcon:Register("CMDT", myLDB, MyAddonDB)
-
--- Overlay
-overlay:SetAllPoints(UIParent)
-overlay:SetFrameStrata("FULLSCREEN_DIALOG")
-overlay:EnableMouse(true)
-overlay:Hide()
-
--- Modal
-modal:SetSize(400, 200)
-modal:SetPoint("CENTER")
-modal:SetBackdrop({
-    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-    edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
-    tile = true,
-    tileSize = 32,
-    edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 }
-})
-modal:SetBackdropColor(0, 0, 0, 0.9)
-modal:SetFrameStrata("DIALOG")
-modal:SetFrameLevel(overlay:GetFrameLevel() + 1)
-modal:EnableMouse(true)
-modal:Hide()
-
--- Frame Header
-local header = modal:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-header:SetPoint("TOP", modal, "TOP", 0, -10)
-header:SetText("CMDT Modal")
-
--- Close Button
-local closeBtn = CreateFrame("Button", nil, modal, "UIPanelButtonTemplate")
-closeBtn:SetFrameLevel(modal:GetFrameLevel() + 1)
-closeBtn:SetSize(80, 24)
-closeBtn:SetPoint("BOTTOM", modal, "BOTTOM", 0, 10)
-closeBtn:SetText("Close")
-closeBtn:EnableMouse(true)
-closeBtn:SetScript("OnClick", function()
-    print("Close button clicked!")
-    modal:Hide()
-    overlay:Hide()
-end)
-
--- Slash command toggling modal
-SLASH_CMDT1 = "/cmdt"
-SlashCmdList["CMDT"] = function()
-    if modal:IsShown() then
-        modal:Hide()
-        overlay:Hide()
-    else
-        overlay:Show()
-        modal:Show()
-    end
-end
