@@ -1,7 +1,3 @@
--- Initialize the Frames
-local modal = CreateFrame("Frame", "MyModalFrame", UIParent, "BackdropTemplate")
-local overlay = CreateFrame("Frame", nil, UIParent)
-
 -- Initialize the Libraries
 local AceGUI = LibStub("AceGUI-3.0")
 local LDB = LibStub:GetLibrary("LibDataBroker-1.1")
@@ -10,6 +6,7 @@ local LDBIcon = LibStub("LibDBIcon-1.0")
 MyAddonDB = MyAddonDB or {}
 local modalFrame = nil
 
+-- Create Ace Modal
 local function CreateAceModal()
     local frame = AceGUI:Create("Frame")
     frame:SetTitle("CMDT")

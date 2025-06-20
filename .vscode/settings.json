@@ -3,6 +3,7 @@
         "LibStub",
         "CreateFrame",
         "UIParent",
-        "SlashCmdList"
+        "SlashCmdList",
+        "GameFontNormalLarge"
     ]
 }
