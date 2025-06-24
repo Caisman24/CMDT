@@ -24,8 +24,81 @@ local ProfessionSpellIDs = {
     ["Mining"] = 2580,
     ["Skinning"] = 8613,
     ["Tailoring"] = 3908,
-    -- Add more professions if needed
 }
+
+local professionCDs = {
+    ["Alchemy"] = {
+        { id = 114852, name = "Transmute: Living Steel" },
+        { id = 114780, name = "Transmute: Trillium Bar" },
+        { id = 122668, name = "Transmute: Primal Diamond" },
+        { id = 114783, name = "Transmute: Imperial Amethyst" },
+        { id = 114781, name = "Transmute: Vermilion Onyx" },
+        { id = 114784, name = "Transmute: Sun's Radiance" },
+        { id = 114786, name = "Transmute: Wild Jade" },
+        { id = 114785, name = "Transmute: River's Heart" },
+        { id = 114787, name = "Transmute: Serpent's Eye" },
+        { id = 114789, name = "Transmute: Primordial Ruby" },
+        { id = 114790, name = "Transmute: Blue Quality Gems" }, -- catch-all
+    },
+
+    ["Enchanting"] = {
+        { id = 116499, name = "Sha Crystal" }, -- cooldown spell
+    },
+
+    ["Inscription"] = {
+        { id = 112996, name = "Scroll of Wisdom" },
+    },
+
+    ["Tailoring"] = {
+        { id = 125557, name = "Imperial Silk" },
+    },
+
+    ["Engineering"] = {
+        { id = 139176, name = "Jard's Peculiar Energy Source" },
+    },
+
+    ["Leatherworking"] = {
+        { id = 142976, name = "Magnificence of Leather" },
+        { id = 142958, name = "Magnificence of Scales" },
+    },
+}
+
+local function FormatTime(seconds)
+    if seconds <= 0 then
+        return "Ready"
+    end
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%02d:%02d:%02d", hours, minutes, secs)
+end
+
+local function GetCooldownStatus(spellID)
+    local start, duration, enabled = GetSpellCooldown(spellID)
+    if enabled == 1 and duration > 1 then
+        local cdLeft = start + duration - GetTime()
+        if cdLeft > 0 then
+            return "Next in: " .. FormatTime(cdLeft)
+        end
+    end
+    return "Ready"
+end
+
+local function GetProfessionCooldownsText(professions)
+    local textLines = {}
+
+    for profName, _ in pairs(professions or {}) do
+        local cdItems = professionCDs[profName]
+        if cdItems then
+            for _, cdItem in ipairs(cdItems) do
+                local status = GetCooldownStatus(cdItem.id)
+                table.insert(textLines, cdItem.name .. ": " .. status)
+            end
+        end
+    end
+
+    return table.concat(textLines, "   ") -- separate with spaces or newlines if you want
+end
 
 -- Utility to get a full character key
 local function GetCharKey()
@@ -37,13 +110,11 @@ end
 -- Save character info on login
 function CMDT:OnInitialize()
     -- Initialize saved variables if needed
-
     CMDT_CharactersDB = CMDT_CharactersDB or {}
 end
 
 function CMDT:OnEnable()
     -- Register event
-
     self:RegisterEvent("PLAYER_ALIVE", "SaveCharacterData")
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "SaveCharacterData")
 end
@@ -100,82 +171,78 @@ local function CreateAceModal()
     end)
 
     for key, data in pairs(CMDT_CharactersDB) do
-        -- Create a horizontal container for the whole character row
-        local charRow = AceGUI:Create("SimpleGroup")
-        charRow:SetLayout("Flow")
-        charRow:SetFullWidth(true)
+        -- First Row: Name + Professions + Delete button
+        local topRow = AceGUI:Create("SimpleGroup")
+        topRow:SetLayout("Flow")
+        topRow:SetFullWidth(true)
 
-        -- Group 1: Character Name (left)
-        local nameGroup = AceGUI:Create("SimpleGroup")
-        nameGroup:SetLayout("Flow")
-        nameGroup:SetFullHeight(true)
-        nameGroup:SetWidth(200) -- fixed width for name column
-
-        local lbl = AceGUI:Create("Label")
+        -- Character Name
+        local nameLbl = AceGUI:Create("Label")
         local c = RAID_CLASS_COLORS[data.class] or { r = 1, g = 1, b = 1 }
         local colorCode = format("|cff%02x%02x%02x", c.r * 255, c.g * 255, c.b * 255)
-        lbl:SetText(colorCode .. data.name .. "-" .. data.realm .. "|r")
-        lbl:SetFullWidth(true)
-        nameGroup:AddChild(lbl)
+        nameLbl:SetText(colorCode .. data.name .. "-" .. data.realm .. "|r")
+        nameLbl:SetWidth(150)
+        topRow:AddChild(nameLbl)
 
-        charRow:AddChild(nameGroup)
-
-        -- Group 2: Professions (center)
-        local profGroup = AceGUI:Create("SimpleGroup")
-        profGroup:SetLayout("Flow")
-        profGroup:SetFullHeight(true)
-        profGroup:SetWidth(400) -- adjust width as needed
-
+        -- Professions (icons + skill)
         for profName, skill in pairs(data.professions or {}) do
-            local spellID = ProfessionSpellIDs and ProfessionSpellIDs[profName]
-            local iconPath
-            if spellID then
-                iconPath = select(3, GetSpellInfo(spellID))
-            end
+            local spellID = ProfessionSpellIDs[profName]
+            local iconPath = spellID and select(3, GetSpellInfo(spellID)) or nil
 
             local iconW = AceGUI:Create("Icon")
-            if iconPath then
-                iconW:SetImage(iconPath)
-            else
-                iconW:SetImage("Interface\\Icons\\INV_Misc_QuestionMark")
-            end
+            iconW:SetImage(iconPath or "Interface\\Icons\\INV_Misc_QuestionMark")
             iconW:SetImageSize(16, 16)
             iconW:SetWidth(20)
-            profGroup:AddChild(iconW)
+            topRow:AddChild(iconW)
 
             local profLabel = AceGUI:Create("Label")
             profLabel:SetText(profName .. " (" .. skill .. ")")
-            profLabel:SetWidth(100)
-            profGroup:AddChild(profLabel)
+            profLabel:SetWidth(110)
+            topRow:AddChild(profLabel)
         end
 
-        charRow:AddChild(profGroup)
-
-        -- Group 3: Delete button (right)
-        local buttonGroup = AceGUI:Create("SimpleGroup")
-        buttonGroup:SetLayout("Flow")
-        buttonGroup:SetFullHeight(true)
-        buttonGroup:SetWidth(160) -- small width for button column
-
+        -- Delete button
         local deleteBtn = AceGUI:Create("Button")
         deleteBtn:SetText("Delete")
         deleteBtn:SetWidth(100)
         deleteBtn:SetCallback("OnClick", function()
             CMDT_CharactersDB[key] = nil
             print("Deleted character:", data.name .. "-" .. data.realm)
-
             if modalFrame then
                 modalFrame:Hide()
                 modalFrame = CreateAceModal()
             end
         end)
-        buttonGroup:AddChild(deleteBtn)
+        topRow:AddChild(deleteBtn)
 
-        charRow:AddChild(buttonGroup)
+        frame:AddChild(topRow)
 
-        -- Add the full row to the frame
-        frame:AddChild(charRow)
+        -- Second Row: Cooldowns
+        local cdRow = AceGUI:Create("SimpleGroup")
+        cdRow:SetLayout("Flow")
+        cdRow:SetFullWidth(true)
+
+        for profName, _ in pairs(data.professions or {}) do
+            local list = professionCDs[profName]
+            if list then
+                for _, entry in ipairs(list) do
+                    local status = GetCooldownStatus(entry.id)
+                    local cdLabel = AceGUI:Create("Label")
+                    cdLabel:SetText(entry.name .. ": " .. status)
+                    cdLabel:SetWidth(250)
+                    cdRow:AddChild(cdLabel)
+                end
+            end
+        end
+
+        frame:AddChild(cdRow)
+        local spacer = AceGUI:Create("Label")
+        spacer:SetText(" ")
+        spacer:SetFullWidth(true)
+        spacer:SetHeight(10)
+        frame:AddChild(spacer)
     end
+
 
     return frame
 end
