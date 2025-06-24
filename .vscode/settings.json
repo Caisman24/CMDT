@@ -4,6 +4,13 @@
         "CreateFrame",
         "UIParent",
         "SlashCmdList",
-        "GameFontNormalLarge"
+        "GameFontNormalLarge",
+        "UnitName",
+        "GetRealmName",
+        "UnitClass",
+        "RAID_CLASS_COLORS",
+        "GetProfessionInfo",
+        "GetProfessions",
+        "GetSpellInfo"
     ]
 }
