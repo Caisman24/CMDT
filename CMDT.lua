@@ -38,11 +38,11 @@ local professionCDs = {
         { id = 114785, name = "Transmute: River's Heart" },
         { id = 114787, name = "Transmute: Serpent's Eye" },
         { id = 114789, name = "Transmute: Primordial Ruby" },
-        { id = 114790, name = "Transmute: Blue Quality Gems" }, -- catch-all
+        { id = 114790, name = "Transmute: Blue Quality Gems" },
     },
 
     ["Enchanting"] = {
-        { id = 116499, name = "Sha Crystal" }, -- cooldown spell
+        { id = 116499, name = "Sha Crystal" },
     },
 
     ["Inscription"] = {
@@ -84,22 +84,6 @@ local function GetCooldownStatus(spellID)
     return "Ready"
 end
 
-local function GetProfessionCooldownsText(professions)
-    local textLines = {}
-
-    for profName, _ in pairs(professions or {}) do
-        local cdItems = professionCDs[profName]
-        if cdItems then
-            for _, cdItem in ipairs(cdItems) do
-                local status = GetCooldownStatus(cdItem.id)
-                table.insert(textLines, cdItem.name .. ": " .. status)
-            end
-        end
-    end
-
-    return table.concat(textLines, "   ") -- separate with spaces or newlines if you want
-end
-
 -- Utility to get a full character key
 local function GetCharKey()
     local name = UnitName("player")
@@ -109,12 +93,10 @@ end
 
 -- Save character info on login
 function CMDT:OnInitialize()
-    -- Initialize saved variables if needed
     CMDT_CharactersDB = CMDT_CharactersDB or {}
 end
 
 function CMDT:OnEnable()
-    -- Register event
     self:RegisterEvent("PLAYER_ALIVE", "SaveCharacterData")
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "SaveCharacterData")
 end
