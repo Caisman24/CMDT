@@ -12,6 +12,8 @@
         "GetProfessionInfo",
         "GetProfessions",
         "GetSpellInfo",
-        "format"
+        "format",
+        "GetSpellCooldown",
+        "GetTime"
     ]
 }

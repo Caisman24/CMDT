@@ -86,8 +86,8 @@ end
 
 -- Utility to get a full character key
 local function GetCharKey()
-    local name = UnitName("player")
-    local realm = GetRealmName()
+    local name, _ = UnitNameUnmodified("player")
+    local realm   = GetRealmName()
     return name .. "-" .. realm
 end
 
